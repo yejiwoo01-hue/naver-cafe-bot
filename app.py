@@ -176,19 +176,38 @@ with st.sidebar.expander("🛠️ 개발자 관리 전용"):
     admin_pw = st.text_input("관리자 비번 입력", type="password")
     if admin_pw == "yeji01":  # 사용자님만 아는 비밀번호
         st.info("관리자 인증 완료. 지금 이 컴퓨터의 코드를 서버에 저장할 수 있습니다.")
-        if st.button("📤 현재 코드 GitHub에 백업"):
-            try:
-                proc = subprocess.run(["python", "upload_to_github.py"], capture_output=True, text=True)
-                if proc.returncode == 0:
-                    st.success("GitHub 업로드 성공!")
-                else:
-                    st.error(f"업로드 실패: {proc.stderr}")
-            except Exception as e:
-                st.error(f"오류 발생: {e}")
+        
+        # 이전 실행 결과가 세션에 있다면 표시
+        if "backup_msg" in st.session_state:
+            if st.session_state.get("backup_success"):
+                st.success(st.session_state.backup_msg)
+            else:
+                st.error(st.session_state.backup_msg)
+            if st.button("결과 확인 완료 (메시지 지우기)"):
+                del st.session_state.backup_msg
+                st.rerun()
+
+        if st.button("📤 현재 코드 GitHub에 백업", help="이 버튼을 클릭하면 온라인 저장소로 코드가 전송됩니다."):
+            with st.spinner("GitHub로 전송 중... 잠시만 기다려주세요."):
+                try:
+                    # 쉘 명령어로 업로드 스크립트 실행
+                    proc = subprocess.run(["python", "upload_to_github.py"], capture_output=True, text=True)
+                    if proc.returncode == 0:
+                        st.session_state.backup_success = True
+                        st.session_state.backup_msg = "🎉 GitHub 업로드 성공! 모든 코드가 백업되었습니다."
+                        st.toast("백업 완료!", icon="✅")
+                    else:
+                        st.session_state.backup_success = False
+                        st.session_state.backup_msg = f"❌ 업로드 실패: {proc.stderr}"
+                except Exception as e:
+                    st.session_state.backup_success = False
+                    st.session_state.backup_msg = f"⚠️ 오류 발생: {e}"
+                st.rerun() # 현재 상태를 반영하기 위해 재실행
     elif admin_pw:
         st.error("비밀번호가 틀렸습니다.")
 
 st.sidebar.divider()
+
 
 
 
