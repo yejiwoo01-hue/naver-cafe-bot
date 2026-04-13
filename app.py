@@ -171,19 +171,25 @@ if st.sidebar.button("✨ 최신 코드로 동기화 (GitHub)"):
             status.update(label="업데이트 실패", state="error")
             st.sidebar.error(msg)
 
-if st.sidebar.button("📤 현재 코드 GitHub에 백업"):
-    st.sidebar.info("지금 이 컴퓨터의 코드를 온라인 저장소에 업로드합니다.")
-    try:
-        # 쉘 명령어로 업로드 스크립트 실행
-        proc = subprocess.run(["python", "upload_to_github.py"], capture_output=True, text=True)
-        if proc.returncode == 0:
-            st.sidebar.success("GitHub 업로드 성공!")
-        else:
-            st.sidebar.error(f"업로드 실패: {proc.stderr}")
-    except Exception as e:
-        st.sidebar.error(f"오류 발생: {e}")
+# --- Admin Section for Backup (Password Protected) ---
+with st.sidebar.expander("🛠️ 개발자 관리 전용"):
+    admin_pw = st.text_input("관리자 비번 입력", type="password")
+    if admin_pw == "yeji01":  # 사용자님만 아는 비밀번호
+        st.info("관리자 인증 완료. 지금 이 컴퓨터의 코드를 서버에 저장할 수 있습니다.")
+        if st.button("📤 현재 코드 GitHub에 백업"):
+            try:
+                proc = subprocess.run(["python", "upload_to_github.py"], capture_output=True, text=True)
+                if proc.returncode == 0:
+                    st.success("GitHub 업로드 성공!")
+                else:
+                    st.error(f"업로드 실패: {proc.stderr}")
+            except Exception as e:
+                st.error(f"오류 발생: {e}")
+    elif admin_pw:
+        st.error("비밀번호가 틀렸습니다.")
 
 st.sidebar.divider()
+
 
 
 
